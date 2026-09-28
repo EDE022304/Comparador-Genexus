@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeneXus XPZ Comparer - GeneXus 16 Diff Tool</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo-container">
+            <svg class="gx-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+                <line x1="9" y1="11" x2="13" y2="11"></line>
+            </svg>
+            <div>
+                <h1>Comparador de Archivos XPZ <span class="badge-gx">GeneXus 16</span></h1>
+                <p class="subtitle">Herramienta de análisis de diferencias por versión (Definition, Rules, Events, Documentation)</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button id="btnLoadSample" class="btn btn-secondary">⚡ Cargar Ejemplo Local</button>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- Section 1: File Upload Dropzones -->
+        <section class="upload-section card">
+            <form id="uploadForm" class="upload-grid">
+                <div class="dropzone" id="dz1">
+                    <input type="file" id="file1" name="file1" accept=".xpz,.xml" required hidden>
+                    <div class="dz-content">
+                        <div class="dz-icon">📁</div>
+                        <div class="dz-title">Archivo V1 (Versión Original / Base)</div>
+                        <div class="dz-desc">Arrastra tu archivo <strong>.XPZ</strong> o haz clic aquí</div>
+                        <div class="file-name" id="fileName1">Ningún archivo seleccionado</div>
+                    </div>
+                </div>
+
+                <div class="versus-badge">VS</div>
+
+                <div class="dropzone" id="dz2">
+                    <input type="file" id="file2" name="file2" accept=".xpz,.xml" required hidden>
+                    <div class="dz-content">
+                        <div class="dz-icon">📁</div>
+                        <div class="dz-title">Archivo V2 (Versión Modificada / Nueva)</div>
+                        <div class="dz-desc">Arrastra tu archivo <strong>.XPZ</strong> o haz clic aquí</div>
+                        <div class="file-name" id="fileName2">Ningún archivo seleccionado</div>
+                    </div>
+                </div>
+
+                <div class="upload-action-bar">
+                    <button type="submit" id="btnCompare" class="btn btn-primary btn-lg">🔍 Comparar Diferencias XPZ</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="spinner-container hidden">
+            <div class="spinner"></div>
+            <p>Procesando y analizando archivos XPZ de GeneXus...</p>
+        </div>
+
+        <!-- Section 2: Results & Diff Viewer -->
+        <section id="resultsSection" class="results-section hidden">
+            <!-- Controls Bar -->
+            <div class="controls-bar card">
+                <div class="control-group">
+                    <label for="objectSelect"><strong>Objeto GeneXus:</strong></label>
+                    <select id="objectSelect" class="form-control select-lg"></select>
+                </div>
+
+                <div class="control-group">
+                    <label for="filterSearch">🔍 Buscar:</label>
+                    <input type="text" id="filterSearch" class="form-control" placeholder="Filtrar texto...">
+                </div>
+
+                <div class="control-group toggle-group">
+                    <label>Modo:</label>
+                    <div class="btn-group">
+                        <button id="btnSideBySide" class="btn btn-sm btn-toggle active">Lado a Lado</button>
+                        <button id="btnUnified" class="btn btn-sm btn-toggle">Unificado</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="chkOnlyChanges"> Mostrar solo líneas con cambios
+                    </label>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-badge stat-added"><span id="statAdded">+0</span> Agregados</div>
+                <div class="stat-badge stat-deleted"><span id="statDeleted">-0</span> Quitados</div>
+                <div class="stat-badge stat-modified"><span id="statModified">~0</span> Modificados</div>
+                <div class="stat-badge stat-total"><span id="statTotal">0</span> Líneas evaluadas</div>
+            </div>
+
+            <!-- GeneXus Tabs Navigation -->
+            <nav class="gx-tabs">
+                <button class="gx-tab active" data-part="Definition">
+                    <span class="tab-icon">📐</span> Definition
+                </button>
+                <button class="gx-tab" data-part="Rules">
+                    <span class="tab-icon">📜</span> Rules
+                </button>
+                <button class="gx-tab" data-part="Events">
+                    <span class="tab-icon">⚡</span> Events
+                </button>
+                <button class="gx-tab" data-part="Documentation">
+                    <span class="tab-icon">📖</span> Documentation
+                </button>
+                <button class="gx-tab" data-part="Variables">
+                    <span class="tab-icon">🔤</span> Variables
+                </button>
+            </nav>
+
+            <!-- Diff Content View with Minimap -->
+            <div class="diff-outer-container card">
+                <div id="diffViewContainer" class="diff-view side-by-side"></div>
+                <div id="minimapTrack" class="minimap-track" title="Minimapa de Cambios (Haz clic para ir al cambio)"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>GeneXus 16 XPZ Comparator &copy; 2026 - Desarrollado para análisis rápido de fuentes GeneXus</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
